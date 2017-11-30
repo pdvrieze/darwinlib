@@ -24,13 +24,10 @@ import android.support.v4.content.FileProvider
 import android.util.Log
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.NonCancellable.isActive
-import nl.adaptivity.android.accountmanager.account
-import nl.adaptivity.android.accountmanager.accountName
-import nl.adaptivity.android.accountmanager.accountType
-import nl.adaptivity.android.accountmanager.hasFeatures
 import nl.adaptivity.android.coroutines.Maybe
 import nl.adaptivity.android.coroutines.SerializableHandler
 import nl.adaptivity.android.coroutines.activityResult
+import nl.adaptivity.android.coroutines.hasFeatures
 import nl.adaptivity.android.darwin.DarwinLibStatusEvents.*
 import nl.adaptivity.android.darwinlib.R
 import java.io.File

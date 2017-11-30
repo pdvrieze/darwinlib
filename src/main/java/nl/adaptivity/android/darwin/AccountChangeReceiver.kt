@@ -1,12 +1,10 @@
 package nl.adaptivity.android.darwin
 
+import android.accounts.Account
 import android.accounts.AccountManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import nl.adaptivity.android.accountmanager.accountName
-import nl.adaptivity.android.accountmanager.accountType
-import nl.adaptivity.android.darwin.AuthenticatedWebClientFactory
 
 class AccountChangeReceiver : BroadcastReceiver() {
 
@@ -18,4 +16,10 @@ class AccountChangeReceiver : BroadcastReceiver() {
             }
         }
     }
+}
+
+internal inline val Intent.accountName: String? get() = extras.getString(AccountManager.KEY_ACCOUNT_NAME)
+internal inline val Intent.accountType: String? get() = extras.getString(AccountManager.KEY_ACCOUNT_TYPE)
+internal inline val Intent.account: Account? get() {
+    return Account(accountName ?: return null, accountType ?: return null)
 }

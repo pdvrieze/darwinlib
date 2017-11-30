@@ -16,7 +16,8 @@
 
 package nl.adaptivity.android.darwin
 
-import android.accounts.*
+import android.accounts.Account
+import android.accounts.AccountManager
 import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Context
@@ -25,7 +26,7 @@ import android.support.annotation.WorkerThread
 import android.util.Log
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.launch
-import nl.adaptivity.android.accountmanager.getAuthToken
+import nl.adaptivity.android.coroutines.getAuthToken
 import java.io.IOException
 import java.net.*
 
