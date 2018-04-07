@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018.
+ *
+ * This file is part of ProcessManager.
+ *
+ * ProcessManager is free software: you can redistribute it and/or modify it under the terms of version 2.1 of the
+ * GNU Lesser General Public License as published by the Free Software Foundation.
+ *
+ * ProcessManager is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with ProcessManager.  If not,
+ * see <http://www.gnu.org/licenses/>.
+ */
+
 package nl.adaptivity.android.darwin
 
 import android.Manifest
@@ -251,7 +267,13 @@ object AuthenticatedWebClientFactory {
     internal fun accountFeatures(authbase: URI?): Array<String?> =
             authbase?.let { arrayOf(it.toASCIIString()) } ?: DEFAULT_AUTHBASE_ARRAY
 
-    @JvmStatic
+  /**
+   * Create a new intent that allow the account to be selected.
+   * @param context The context to use
+   * @param account A current account hint (passed to [AccountManager.newChooseAccountIntent]
+   * @param authbase The authentication base to use
+   */
+  @JvmStatic
     fun selectAccount(context: Context, account: Account?, authbase: URI?): Intent {
         val options = authbase?.let { Bundle(1).apply { putString(AuthenticatedWebClient.KEY_AUTH_BASE, it.toASCIIString()) } }
 
