@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016.
+ * Copyright (c) 2018.
  *
  * This file is part of ProcessManager.
  *
@@ -10,7 +10,7 @@
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License along with Foobar.  If not,
+ * You should have received a copy of the GNU Lesser General Public License along with ProcessManager.  If not,
  * see <http://www.gnu.org/licenses/>.
  */
 
@@ -30,7 +30,6 @@ import android.widget.Toast
 import nl.adaptivity.android.darwinlib.R
 
 import java.io.File
-import java.net.URI
 
 
 internal inline var Intent.downloadId: Long
@@ -41,14 +40,14 @@ internal inline val Intent.isActionDownloadComplete get() = action == DownloadMa
 
 internal fun Cursor.getInt(columnName:String) = getInt(getColumnIndex(columnName))
 internal fun Cursor.getString(columnName:String) = getString(getColumnIndex(columnName))
-internal fun Cursor.getUri(columnName:String) = URI.create(getString(getColumnIndex(columnName)))
+internal fun Cursor.getUri(columnName:String) = Uri.parse(getString(getColumnIndex(columnName)))
 
 /**
  * A dialog fragment for downloading the authenticator
  */
 class DownloadDialog : DialogFragment(), DialogInterface.OnClickListener {
     private var downloadReference = -1L
-    private var downloaded: File? = null
+
     private var requestCode = INSTALL_ACTIVITY_REQUEST
 
     private val broadcastReceiver = object : BroadcastReceiver() {
@@ -64,12 +63,14 @@ class DownloadDialog : DialogFragment(), DialogInterface.OnClickListener {
 
                             if (data.getInt(DownloadManager.COLUMN_STATUS) == DownloadManager.STATUS_SUCCESSFUL) {
 
-                                downloaded = File(data.getUri(DownloadManager.COLUMN_LOCAL_URI))
 
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                    doInstall(context, FileProvider.getUriForFile(context, "${context.applicationInfo.packageName}.darwinlib.fileProvider", downloaded))
+                              val downloadedUri = data.getUri(DownloadManager.COLUMN_LOCAL_URI)
+
+                              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    doInstall(context, FileProvider.getUriForFile(context, "${context.applicationInfo.packageName}.darwinlib.fileProvider",
+                                                                                  File(downloadedUri.path)))
                                 } else {
-                                    doInstall(context, Uri.fromFile(downloaded))
+                                    doInstall(context, downloadedUri)
                                 }
                             }
                         }
