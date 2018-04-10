@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016.
+ * Copyright (c) 2018.
  *
  * This file is part of ProcessManager.
  *
@@ -10,7 +10,7 @@
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License along with Foobar.  If not,
+ * You should have received a copy of the GNU Lesser General Public License along with ProcessManager.  If not,
  * see <http://www.gnu.org/licenses/>.
  */
 
@@ -27,26 +27,20 @@ description = 'Android support library for darwin functionality'
 
 ext {
     if (!rootProject.hasProperty('androidTarget')) {
-        androidTarget = 26
+        androidTarget = 27
     }
     if (!rootProject.hasProperty('androidCompatVersion')) {
-        androidCompatVersion = androidTarget == 25 ? '25.3.1' : '26.1.0'
-    }
-    if (!rootProject.hasProperty('androidBuildToolsVersion')) {
-        androidBuildToolsVersion = androidTarget == 25 ? '25.0.3' : '26.0.2'
-    }
-    if (!rootProject.hasProperty('anko_version')) {
-        anko_version = '0.10.3'
+        androidCompatVersion = androidTarget == '27.1.1'
     }
 }
 
 buildscript {
     ext {
         if (!has('androidPluginVersion')) {
-            androidPluginVersion = '3.0.0'
+            androidPluginVersion = '3.1.1'
         }
         if (!has('kotlin_version')) {
-            kotlin_version = '1.2.0'
+            kotlin_version = '1.2.30'
         }
     }
     repositories {
@@ -58,19 +52,18 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.1'
+        classpath "com.android.tools.build:gradle:${androidPluginVersion}"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlin_version}"
     }
 }
 
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.3.1'
+    gradleVersion = '4.6'
 }
 
 android {
     compileSdkVersion androidTarget
-    buildToolsVersion "${androidBuildToolsVersion}"
 
     defaultConfig {
         minSdkVersion 14
@@ -90,11 +83,9 @@ dependencies {
     implementation "com.android.support:support-v4:${androidCompatVersion}"
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     implementation 'com.esotericsoftware:kryo:4.0.1'
-    api "net.devrieze:android-coroutines:0.6.1"
-//    compile project(':android-coroutines')
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.19.3"
-//    compile "org.jetbrains.anko:anko-commons:$anko_version"
+    api "net.devrieze:android-coroutines:0.6.3"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.22.5"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
 
 kotlin {

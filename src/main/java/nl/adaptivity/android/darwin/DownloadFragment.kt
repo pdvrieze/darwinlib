@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018.
+ *
+ * This file is part of ProcessManager.
+ *
+ * ProcessManager is free software: you can redistribute it and/or modify it under the terms of version 2.1 of the
+ * GNU Lesser General Public License as published by the Free Software Foundation.
+ *
+ * ProcessManager is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with ProcessManager.  If not,
+ * see <http://www.gnu.org/licenses/>.
+ */
+
 package nl.adaptivity.android.darwin
 
 import android.app.Activity
@@ -29,7 +45,7 @@ import kotlin.coroutines.experimental.Continuation
  */
 class DownloadFragment(): Fragment() {
     var downloadReference = -1L
-    private var continuation: ParcelableContinuation<URI?>? = null
+    private var continuation: ParcelableContinuation<Uri?>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -107,9 +123,9 @@ class DownloadFragment(): Fragment() {
         private const val KEY_CONTINUATION = "_CONTINUATION_"
         private var fragNo = 0
 
-        fun newInstance(continuation: Continuation<URI>): DownloadFragment {
+        fun newInstance(continuation: Continuation<URI>, context: Context?): DownloadFragment {
             return DownloadFragment().apply {
-                arguments = bundle { it[KEY_CONTINUATION] = ParcelableContinuation<URI>(continuation) }
+                arguments = bundle { it[KEY_CONTINUATION] = ParcelableContinuation<URI>(continuation, context) }
             }
         }
 
@@ -118,7 +134,7 @@ class DownloadFragment(): Fragment() {
          */
         suspend fun download(activity: Activity, downloadUri: Uri): URI {
             return suspendCancellableCoroutine<URI> { cont ->
-                val frag = newInstance(cont)
+                val frag = newInstance(cont, activity)
                 activity.fragmentManager.beginTransaction().add(frag, nextTag()).commit()
                 activity.runOnUiThread {
                     activity.fragmentManager.executePendingTransactions()
