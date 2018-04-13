@@ -31,7 +31,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.support.annotation.RequiresPermission
 import android.support.annotation.WorkerThread
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationManagerCompat
@@ -292,11 +291,18 @@ object AuthenticatedWebClientFactory {
   }
 
   @JvmStatic
-  fun handleSelectAcountActivityResult(context: Context, resultCode: Int, resultData: Intent): Account? {
+  fun handleSelectAcountActivityResult(context: Context, resultCode: Int, resultData: Intent?): Account? {
     if (resultCode == Activity.RESULT_OK) {
-      return with(resultData) { Account(accountName, accountType) }.also { account ->
-        setStoredAccount(context, account)
+      val accountName = resultData?.accountName
+      val accountType = resultData?.accountType
+      if (accountName !=null && accountType!=null) {
+        return Account(accountName, accountType).also { account ->
+          setStoredAccount(context, account)
+        }
+      } else {
+        setStoredAccount(context, null)
       }
+
     } // else ignore
     return getStoredAccount(context) // Just return the stored account instead.
   }
