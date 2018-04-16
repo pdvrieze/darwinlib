@@ -23,6 +23,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
@@ -35,7 +36,6 @@ import nl.adaptivity.android.darwinlib.R
 import nl.adaptivity.android.kotlin.bundle
 import nl.adaptivity.android.kotlin.set
 import java.io.File
-import java.net.URI
 import kotlin.coroutines.experimental.Continuation
 
 /**
@@ -106,6 +106,7 @@ class DownloadFragment(): Fragment() {
         val request = DownloadManager.Request(downloadUri).apply {
             setDescription(description)
             setTitle(title)
+            setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         }
         val cacheDir = activity.externalCacheDir
         val downloadFile = File(cacheDir, fileName)
@@ -123,17 +124,17 @@ class DownloadFragment(): Fragment() {
         private const val KEY_CONTINUATION = "_CONTINUATION_"
         private var fragNo = 0
 
-        fun newInstance(continuation: Continuation<URI>, context: Context?): DownloadFragment {
+        fun newInstance(continuation: Continuation<Uri>, context: Context?): DownloadFragment {
             return DownloadFragment().apply {
-                arguments = bundle { it[KEY_CONTINUATION] = ParcelableContinuation<URI>(continuation, context) }
+                arguments = bundle { it[KEY_CONTINUATION] = ParcelableContinuation(continuation, context) }
             }
         }
 
         /**
          * Download the resource at [downloadUri] and return a URI of the local location
          */
-        suspend fun download(activity: Activity, downloadUri: Uri): URI {
-            return suspendCancellableCoroutine<URI> { cont ->
+        suspend fun download(activity: Activity, downloadUri: Uri): Uri {
+            return suspendCancellableCoroutine<Uri> { cont ->
                 val frag = newInstance(cont, activity)
                 activity.fragmentManager.beginTransaction().add(frag, nextTag()).commit()
                 activity.runOnUiThread {
@@ -146,7 +147,7 @@ class DownloadFragment(): Fragment() {
         /**
          * Async version of [download] that has a callback instead of being a suspend function.
          */
-        fun download(activity: Activity, downloadUri: Uri, callback: (Maybe<URI>) -> Unit) {
+        fun download(activity: Activity, downloadUri: Uri, callback: (Maybe<Uri>) -> Unit) {
             launch {
                 try {
                     download(activity, downloadUri).also { callback(Maybe.Ok(it)) }
@@ -165,3 +166,13 @@ class DownloadFragment(): Fragment() {
     }
 
 }
+
+
+internal inline var Intent.downloadId: Long
+    get() = getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L)
+    set(value) { extras.putLong(DownloadManager.EXTRA_DOWNLOAD_ID, value) }
+
+internal inline val Intent.isActionDownloadComplete get() = action == DownloadManager.ACTION_DOWNLOAD_COMPLETE
+
+internal fun Cursor.getInt(columnName:String) = getInt(getColumnIndex(columnName))
+internal fun Cursor.getUri(columnName:String) = Uri.parse(getString(getColumnIndex(columnName)))

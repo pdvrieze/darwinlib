@@ -38,11 +38,7 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
 import android.util.Log
 import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.NonCancellable.isActive
-import nl.adaptivity.android.coroutines.Maybe
-import nl.adaptivity.android.coroutines.SerializableHandler
-import nl.adaptivity.android.coroutines.activityResult
-import nl.adaptivity.android.coroutines.hasFeatures
+import nl.adaptivity.android.coroutines.*
 import nl.adaptivity.android.darwin.DarwinLibStatusEvents.*
 import nl.adaptivity.android.darwinlib.R
 import java.io.File
@@ -75,24 +71,6 @@ object AuthenticatedWebClientFactory {
       }
       return channelId.also { _notificationChannel = it }
     }
-
-  interface AuthenticatedWebClientCallbacks {
-    /**
-     * The system should present a download dialog. Probably using [DownloadDialog]
-     */
-    fun showDownloadDialog()
-
-    /**
-     * Called when an account needs to be selected. The receiver should normally call
-     * [Activity.startActivity] with [selectAccount] as parameter.
-     */
-    fun startSelectAccountActivity(selectAccount: Intent)
-
-    /**
-     * Called when download was cancelled.
-     */
-    fun onDownloadCancelled()
-  }
 
   /**
    * Get an authentication token. Just a forward to the actual client.
@@ -307,12 +285,12 @@ object AuthenticatedWebClientFactory {
     return getStoredAccount(context) // Just return the stored account instead.
   }
 
-  private suspend fun ensureAuthenticator(activity: Activity): Boolean {
+  private suspend fun ActivityCoroutineScope<*>.ensureAuthenticator(): Boolean {
     if (hasAuthenticator(activity)) return true
-    return tryDownloadAndInstallAuthenticator(activity) is Maybe.Ok
+    return tryDownloadAndInstallAuthenticator() is Maybe.Ok
   }
 
-  suspend fun ensureAccount(activity: Activity, authBase: URI?): Maybe<Account?> {
+  suspend fun ActivityCoroutineScope<*>.ensureAccount(authBase: URI?): Maybe<Account?> {
     // If we have a stored, valid, account, just return it
     getStoredAccount(activity)?.let { account ->
       if (isAccountValid(activity, account, authBase)) {
@@ -321,7 +299,7 @@ object AuthenticatedWebClientFactory {
         setStoredAccount(activity, null)
       }
     }
-    if (!ensureAuthenticator(activity)) return Maybe.cancelled()
+    if (!ensureAuthenticator()) return Maybe.cancelled()
     val selectAccountIntent = selectAccount(activity, null, authBase)
     return activity.activityResult(selectAccountIntent)
       .apply { activity.reportStatus(select(ACCOUNT_SELECTED, ACCOUNT_SELECTION_CANCELLED, ACCOUNT_SELECTION_FAILED)) }
@@ -332,19 +310,12 @@ object AuthenticatedWebClientFactory {
   fun tryEnsureAccount(context: Activity,
                        authBase: URI?,
                        callback: SerializableHandler<Activity, Maybe<Account?>>): Job {
-    return launch {
-      callback(context, ensureAccount(context, authBase))
+    return context.aLaunch {
+      callback(context, ensureAccount(authBase))
     }
   }
 
-  @JvmStatic
-  fun tryDownloadAndInstallAuthenticator(activity: Activity, handler: SerializableHandler<Activity, Maybe<Unit>>): Job {
-    return launch {
-      handler(activity, tryDownloadAndInstallAuthenticator(activity))
-    }
-  }
-
-  suspend fun tryDownloadAndInstallAuthenticator(activity: Activity): Maybe<Unit> {
+  suspend fun ActivityCoroutineScope<*>.tryDownloadAndInstallAuthenticator(): Maybe<Unit> {
     if (SuspDownloadDialog.newInstance(-1).show(activity,
                                                 AuthenticatedWebClient.DOWNLOAD_DIALOG_TAG).flatMap() != true) {
       activity.reportStatus(AUTHENTICATOR_DOWNLOAD_REJECTED)
@@ -356,19 +327,18 @@ object AuthenticatedWebClientFactory {
     if (!isActive) return Maybe.cancelled()
     activity.reportStatus(AUTHENTICATOR_DOWNLOAD_SUCCESS)
 
-    val downloaded = File(downloadedApk)
+    val downloaded = File(URI.create(downloadedApk.toString()))
 
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      doInstall(activity,
-                FileProvider.getUriForFile(activity, "${activity.applicationInfo.packageName}.darwinlib.fileProvider",
-                                           downloaded))
+      doInstall(
+              FileProvider.getUriForFile(activity, "${activity.applicationInfo.packageName}.darwinlib.fileProvider", downloaded))
     } else {
-      doInstall(activity, Uri.fromFile(downloaded))
+      doInstall(Uri.fromFile(downloaded))
     }
   }
 
 
-  suspend fun doInstall(activity: Activity, uri: Uri): Maybe<Unit> {
+  suspend fun ActivityCoroutineScope<*>.doInstall(uri: Uri): Maybe<Unit> {
     val installIntent = Intent(Intent.ACTION_VIEW).apply {
       setDataAndType(uri, "application/vnd.android.package-archive")
       addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -400,7 +370,7 @@ object AuthenticatedWebClientFactory {
   fun <R> withClient(context: Context,
                      account: Account,
                      authBase: URI?,
-                     body: suspend (AuthenticatedWebClient) -> R): Deferred<R> {
+                     body: suspend CoroutineScope.(AuthenticatedWebClient) -> R): Deferred<R> {
     return async {
 
       val client = newClientAsync(context, account, authBase)
@@ -416,11 +386,11 @@ object AuthenticatedWebClientFactory {
 }
 
 
-suspend fun AccountManager.isAccountValid(account: Account?, authBase: URI?): Boolean {
+suspend fun ActivityCoroutineScope<*>.isAccountValid(account: Account?, authBase: URI?): Boolean {
   if (account == null) return false
 
   try {
-    return hasFeatures(account, AuthenticatedWebClientFactory.accountFeatures(authBase))
+    return account.hasFeatures(AuthenticatedWebClientFactory.accountFeatures(authBase))
   } catch (e: AuthenticatorException) {
     return false
   }
