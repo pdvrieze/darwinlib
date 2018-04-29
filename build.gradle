@@ -37,10 +37,10 @@ ext {
 buildscript {
     ext {
         if (!has('androidPluginVersion')) {
-            androidPluginVersion = '3.1.1'
+            androidPluginVersion = '3.1.2'
         }
         if (!has('kotlin_version')) {
-            kotlin_version = '1.2.40'
+            kotlin_version = '1.2.41'
         }
     }
     repositories {
@@ -52,7 +52,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.2'
+        classpath "com.android.tools.build:gradle:$androidPluginVersion"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlin_version}"
     }
 }
