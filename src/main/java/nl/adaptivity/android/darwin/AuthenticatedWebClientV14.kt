@@ -73,7 +73,7 @@ internal class AuthenticatedWebClientV14(override val account: Account, override
                     connection.responseCode == HttpURLConnection.HTTP_UNAUTHORIZED && repeat==0 -> {
                         try {
                             connection.errorStream.use { errorStream ->
-                                errorStream.skip(Integer.MAX_VALUE.toLong())
+                                errorStream.skip(Int.MAX_VALUE.toLong())
                             }
                         } finally {
                             connection.disconnect()
@@ -134,7 +134,7 @@ internal class AuthenticatedWebClientV14(override val account: Account, override
 
             if (connection.responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
                 connection.errorStream.use { errorStream ->
-                    errorStream.skip(Integer.MAX_VALUE.toLong())
+                    errorStream.skip(Int.MAX_VALUE.toLong())
                 }
 
                 Log.d(TAG, "execute: Invalidating auth token")
