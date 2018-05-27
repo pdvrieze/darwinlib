@@ -39,6 +39,7 @@ import android.support.v4.content.FileProvider
 import android.util.Log
 import kotlinx.coroutines.experimental.*
 import nl.adaptivity.android.coroutines.*
+import nl.adaptivity.android.darwin.AuthenticatedWebClientFactory.tryDownloadAndInstallAuthenticator
 import nl.adaptivity.android.darwin.DarwinLibStatusEvents.*
 import nl.adaptivity.android.darwinlib.R
 import java.io.File
@@ -50,7 +51,7 @@ import java.net.URI
  */
 object AuthenticatedWebClientFactory {
 
-  private val TAG = "AuthWebClientFty"
+  private const val TAG = "AuthWebClientFty"
 
   private val DEFAULT_AUTHBASE_ARRAY = arrayOf<String?>(null)
 
@@ -285,11 +286,6 @@ object AuthenticatedWebClientFactory {
     return getStoredAccount(context) // Just return the stored account instead.
   }
 
-  private suspend fun ActivityCoroutineScope<*>.ensureAuthenticator(): Boolean {
-    if (hasAuthenticator(activity)) return true
-    return tryDownloadAndInstallAuthenticator() is Maybe.Ok
-  }
-
   suspend fun ActivityCoroutineScope<*>.ensureAccount(authBase: URI?): Maybe<Account?> {
     // If we have a stored, valid, account, just return it
     getStoredAccount(activity)?.let { account ->
@@ -383,6 +379,11 @@ object AuthenticatedWebClientFactory {
     return AuthenticatedWebClientV14(account, authBase)
   }
 
+}
+
+private suspend fun ActivityCoroutineScope<*>.ensureAuthenticator(): Boolean {
+    if (AuthenticatedWebClientFactory.hasAuthenticator(activity)) return true
+    return tryDownloadAndInstallAuthenticator() is Maybe.Ok
 }
 
 
