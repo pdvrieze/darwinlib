@@ -35,13 +35,17 @@ import android.support.annotation.WorkerThread
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationManagerCompat
 import android.support.v4.content.ContextCompat
+import android.support.v4.content.FileProvider
 import android.util.Log
 import kotlinx.coroutines.experimental.*
 import nl.adaptivity.android.coroutines.*
 import nl.adaptivity.android.darwinlib.R
 import java.io.IOException
+import java.io.File
 import java.net.URI
 import nl.adaptivity.android.darwin.ensureAccount as ensureAccountToplevel
+import nl.adaptivity.android.darwin.tryDownloadAndInstallAuthenticator as tryDownloadAndInstallAuthenticatorTL
+import nl.adaptivity.android.darwin.DarwinLibStatusEvents.*
 
 /**
  * A class for creating authenticated web clients
@@ -303,49 +307,9 @@ object AuthenticatedWebClientFactory {
     }
 
     suspend fun ActivityCoroutineScope<*, *>.tryDownloadAndInstallAuthenticator(): Maybe<Unit> {
-        if (SuspDownloadDialog.newInstance(-1).show(activity,
-                                                    AuthenticatedWebClient.DOWNLOAD_DIALOG_TAG).flatMap() != true) {
-            activity.reportStatus(AUTHENTICATOR_DOWNLOAD_REJECTED)
-            return Maybe.cancelled()
-        }
-        if (!isActive) return Maybe.cancelled()
-
-        val downloadedApk = DownloadFragment.download(activity, Uri.parse(AUTHENTICATOR_URL))
-        if (!isActive) return Maybe.cancelled()
-        activity.reportStatus(AUTHENTICATOR_DOWNLOAD_SUCCESS)
-
-        val downloaded = File(URI.create(downloadedApk.toString()))
-
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            doInstall(
-                FileProvider.getUriForFile(activity, "${activity.applicationInfo.packageName}.darwinlib.fileProvider",
-                                           downloaded))
-        } else {
-            doInstall(Uri.fromFile(downloaded))
-        }
+        return tryDownloadAndInstallAuthenticatorTL()
     }
 
-
-    suspend fun ActivityCoroutineScope<*, *>.doInstall(uri: Uri): Maybe<Unit> {
-        val installIntent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(uri, "application/vnd.android.package-archive")
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        activity.activityResult(installIntent).also { result ->
-            result.onError {
-                activity.reportStatus(AUTHENTICATOR_INSTALL_ERROR)
-                return this
-            }
-        }
-
-        return if (hasAuthenticator(AccountManager.get(activity))) {
-            activity.reportStatus(AUTHENTICATOR_INSTALL_SUCCESS)
-            Maybe.Ok(Unit)
-        } else {
-            activity.reportStatus(AUTHENTICATOR_INSTALL_CANCELLED)
-            Maybe.cancelled()
-        }
-    }
 
 
     @JvmStatic
@@ -375,9 +339,53 @@ object AuthenticatedWebClientFactory {
 
 private suspend fun ActivityCoroutineScope<*, *>.ensureAuthenticator(): Boolean {
     if (AuthenticatedWebClientFactory.hasAuthenticator(activity)) return true
-    return tryDownloadAndInstallAuthenticator() is Maybe.Ok
+    return tryDownloadAndInstallAuthenticatorTL() is Maybe.Ok<*>
 }
 
+suspend fun ActivityCoroutineScope<*, *>.tryDownloadAndInstallAuthenticator(): Maybe<Unit> {
+    if (SuspDownloadDialog.newInstance(-1).show(activity,
+                                                AuthenticatedWebClient.DOWNLOAD_DIALOG_TAG).flatMap() != true) {
+        activity.reportStatus(AUTHENTICATOR_DOWNLOAD_REJECTED)
+        return Maybe.cancelled()
+    }
+    if (!isActive) return Maybe.cancelled()
+
+    val downloadedApk = DownloadFragment.download(activity, Uri.parse(AUTHENTICATOR_URL))
+    if (!isActive) return Maybe.cancelled()
+    activity.reportStatus(AUTHENTICATOR_DOWNLOAD_SUCCESS)
+
+    val downloaded = File(URI.create(downloadedApk.toString()))
+
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        doInstall(
+            FileProvider.getUriForFile(activity, "${activity.applicationInfo.packageName}.darwinlib.fileProvider",
+                                       downloaded))
+    } else {
+        doInstall(Uri.fromFile(downloaded))
+    }
+}
+
+
+suspend fun ActivityCoroutineScope<*, *>.doInstall(uri: Uri): Maybe<Unit> {
+    val installIntent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, "application/vnd.android.package-archive")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    activity.activityResult(installIntent).also { result ->
+        result.onError {
+            activity.reportStatus(AUTHENTICATOR_INSTALL_ERROR)
+            return this
+        }
+    }
+
+    return if (AuthenticatedWebClientFactory.hasAuthenticator(AccountManager.get(activity))) {
+        activity.reportStatus(AUTHENTICATOR_INSTALL_SUCCESS)
+        Maybe.Ok(Unit)
+    } else {
+        activity.reportStatus(AUTHENTICATOR_INSTALL_CANCELLED)
+        Maybe.cancelled()
+    }
+}
 
 suspend fun ContextedCoroutineScope<*, *>.isAccountValid(account: Account?, authBase: URI?): Boolean {
     if (account == null) return false
