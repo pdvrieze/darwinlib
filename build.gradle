@@ -80,9 +80,9 @@ android {
 
 dependencies {
     implementation "com.android.support:appcompat-v7:${androidCompatVersion}"
-    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.1'
 
-    api "net.devrieze:android-coroutines-appcompat:0.6.3"
+    api "net.devrieze:android-coroutines-appcompat:0.7.0-SNAPSHOT"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.22.5"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
