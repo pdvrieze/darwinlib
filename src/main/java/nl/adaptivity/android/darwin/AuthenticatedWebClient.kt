@@ -177,7 +177,7 @@ interface AuthenticatedWebClient {
 
         var contentType:String
             get() = getHeader("Content-type") ?: "application/binary"
-            set(value) { setHeader("Content-type", contentType) }
+            set(value) { setHeader("Content-type", value) }
 
         init {
             this.contentType = contentType ?: "application/binary"
@@ -272,5 +272,8 @@ interface AuthenticatedWebClient {
 typealias RequestSuccess = IRequestSuccess// (HttpURLConnection)->Unit
 typealias RequestFailure = IRequestFailure//(HttpURLConnection?)->Unit
 
+
+@Suppress("NOTHING_TO_INLINE")
 inline operator fun IRequestSuccess.invoke(connection: HttpURLConnection) = onSuccess(connection)
+@Suppress("NOTHING_TO_INLINE")
 inline operator fun IRequestFailure.invoke(connection: HttpURLConnection?) = onFailure(connection)

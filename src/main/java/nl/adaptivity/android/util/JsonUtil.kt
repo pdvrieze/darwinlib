@@ -58,6 +58,7 @@ inline fun <R> JsonReader.inObject(block: ()->R): R {
 fun JsonReader.writeTo(out: JsonWriter) {
     val reader = this
     while (reader.hasNext()) {
+        @Suppress("NON_EXHAUSTIVE_WHEN")
         when (reader.peek()) {
             JsonToken.BEGIN_ARRAY -> {
                 out.inArray {

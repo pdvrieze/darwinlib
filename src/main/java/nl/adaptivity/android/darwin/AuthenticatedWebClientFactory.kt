@@ -39,13 +39,13 @@ import android.support.v4.content.FileProvider
 import android.util.Log
 import kotlinx.coroutines.experimental.*
 import nl.adaptivity.android.coroutines.*
+import nl.adaptivity.android.darwin.DarwinLibStatusEvents.*
 import nl.adaptivity.android.darwinlib.R
-import java.io.IOException
 import java.io.File
+import java.io.IOException
 import java.net.URI
 import nl.adaptivity.android.darwin.ensureAccount as ensureAccountToplevel
 import nl.adaptivity.android.darwin.tryDownloadAndInstallAuthenticator as tryDownloadAndInstallAuthenticatorTL
-import nl.adaptivity.android.darwin.DarwinLibStatusEvents.*
 
 /**
  * A class for creating authenticated web clients
@@ -87,8 +87,10 @@ object AuthenticatedWebClientFactory {
     }
 
 
+    @Deprecated("Use suspend version")
     @WorkerThread
     fun getAuthToken(accountManager: AccountManager, context: Context, authBase: URI?, account: Account): String? {
+        @Suppress("DEPRECATION")
         if (!AuthenticatedWebClientFactory.isAccountValid(context, accountManager, account, authBase)) {
             throw AuthenticatedWebClient.InvalidAccountException()
         }
@@ -186,6 +188,7 @@ object AuthenticatedWebClientFactory {
     @Deprecated("Use suspend version", ReplaceWith("AccountManager.get(context).isAccountValid(account, authBase)"))
     fun isAccountValid(context: Context, account: Account, authBase: URI?): Boolean {
         val accountManager = AccountManager.get(context)
+        @Suppress("DEPRECATION")
         return isAccountValid(context, accountManager, account, authBase)
     }
 
@@ -196,6 +199,7 @@ object AuthenticatedWebClientFactory {
     fun isAccountValid(context: Context, accountManager: AccountManager, account: Account?, authBase: URI?): Boolean {
         if (ContextCompat.checkSelfPermission(context,
                                               Manifest.permission.GET_ACCOUNTS) == PackageManager.PERMISSION_GRANTED) {
+            @Suppress("DEPRECATION")
             return isAccountValid(accountManager, account, authBase)
         } else { // If we are not able to enumerate the accounts use a workaround instead by attempting to get the auth token.
 
@@ -325,13 +329,13 @@ object AuthenticatedWebClientFactory {
                        body: suspend CoroutineScope.(AuthenticatedWebClient) -> R): Deferred<R> {
         return async {
 
-            val client = newClientAsync(context, account, authBase)
+            val client = newClientAsync(account, authBase)
 
             if (isActive) body(client) else throw CancellationException()
         }
     }
 
-    private fun newClientAsync(context: Context, account: Account, authBase: URI?): AuthenticatedWebClient {
+    private fun newClientAsync(account: Account, authBase: URI?): AuthenticatedWebClient {
         return AuthenticatedWebClientV14(account, authBase)
     }
 
