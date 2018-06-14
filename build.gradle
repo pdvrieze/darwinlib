@@ -37,10 +37,10 @@ ext {
 buildscript {
     ext {
         if (!has('androidPluginVersion')) {
-            androidPluginVersion = '3.1.2'
+            androidPluginVersion = '3.1.3'
         }
         if (!has('kotlin_version')) {
-            kotlin_version = '1.2.41'
+            kotlin_version = '1.2.50'
         }
     }
     repositories {
@@ -80,7 +80,7 @@ android {
 
 dependencies {
     implementation "com.android.support:appcompat-v7:${androidCompatVersion}"
-    implementation 'com.android.support.constraint:constraint-layout:1.1.1'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
 
     api "net.devrieze:android-coroutines-appcompat:0.7.0-SNAPSHOT"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.22.5"
