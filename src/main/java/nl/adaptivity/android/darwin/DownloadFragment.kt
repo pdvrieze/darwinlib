@@ -14,6 +14,8 @@
  * see <http://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("DEPRECATION")
+
 package nl.adaptivity.android.darwin
 
 import android.app.Activity

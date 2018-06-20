@@ -83,6 +83,7 @@ object AuthenticatedWebClientFactory {
     @JvmStatic
     @WorkerThread
     fun getAuthToken(context: Context, authBase: URI, account: Account): String? {
+        @Suppress("DEPRECATION")
         return getAuthToken(AccountManager.get(context), context, authBase, account)
     }
 
@@ -323,8 +324,7 @@ object AuthenticatedWebClientFactory {
 
 
     @JvmStatic
-    fun <R> withClient(context: Context,
-                       account: Account,
+    fun <R> withClient(account: Account,
                        authBase: URI?,
                        body: suspend CoroutineScope.(AuthenticatedWebClient) -> R): Deferred<R> {
         return async {

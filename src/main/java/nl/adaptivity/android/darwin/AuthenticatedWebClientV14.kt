@@ -53,6 +53,7 @@ internal class AuthenticatedWebClientV14(override val account: Account, override
 
     suspend fun execute(activity: Activity, request: AuthenticatedWebClient.WebRequest): HttpURLConnection? {
         val am = AccountManager.get(activity)
+        @Suppress("DEPRECATION")
         val token = am.getAuthToken(activity, account, AuthenticatedWebClient.ACCOUNT_TOKEN_TYPE)
         if (token!=null) {
             val cookieUri = request.uri
