@@ -27,10 +27,10 @@ description = 'Android support library for darwin functionality'
 
 ext {
     if (!rootProject.hasProperty('androidTarget')) {
-        androidTarget = 27
+        androidTarget = 28
     }
     if (!rootProject.hasProperty('androidCompatVersion')) {
-        androidCompatVersion = androidTarget == '27.1.1'
+        androidCompatVersion = androidTarget == '28.0.0-alpha1'
     }
 }
 
@@ -59,7 +59,7 @@ buildscript {
 
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.6'
+    gradleVersion = '4.8'
 }
 
 android {
@@ -80,9 +80,10 @@ android {
 
 dependencies {
     implementation "com.android.support:appcompat-v7:${androidCompatVersion}"
+    implementation "com.android.support:support-compat:${androidCompatVersion}"
     implementation 'com.android.support.constraint:constraint-layout:1.1.2'
 
-    api "net.devrieze:android-coroutines-appcompat:0.7.0-SNAPSHOT"
+    api "net.devrieze:android-coroutines-appcompat:0.6.991"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.22.5"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
