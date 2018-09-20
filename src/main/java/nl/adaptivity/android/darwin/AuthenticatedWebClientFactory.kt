@@ -157,7 +157,7 @@ object AuthenticatedWebClientFactory {
     @Suppress("unused")
     @JvmStatic
     fun getAuthBase(mBase: URI?): URI? {
-        return mBase?.resolve("/accounts/")
+        return mBase?.resolve("/accountmgr/")
     }
 
     internal fun getSharedPreferences(context: Context): SharedPreferences {
