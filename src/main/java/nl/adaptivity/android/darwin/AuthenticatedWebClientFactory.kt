@@ -37,7 +37,7 @@ import android.support.v4.app.NotificationManagerCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
 import android.util.Log
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.*
 import nl.adaptivity.android.coroutines.*
 import nl.adaptivity.android.darwin.DarwinLibStatusEvents.*
 import nl.adaptivity.android.darwinlib.R

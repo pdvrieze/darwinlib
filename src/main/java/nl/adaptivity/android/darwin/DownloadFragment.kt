@@ -29,16 +29,16 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
-import kotlinx.coroutines.experimental.CancellationException
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.suspendCancellableCoroutine
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import nl.adaptivity.android.coroutines.Maybe
 import nl.adaptivity.android.coroutines.ParcelableContinuation
 import nl.adaptivity.android.darwinlib.R
 import nl.adaptivity.android.kotlin.bundle
 import nl.adaptivity.android.kotlin.set
 import java.io.File
-import kotlin.coroutines.experimental.Continuation
+import kotlin.coroutines.Continuation
 
 /**
  * Fragment that encapsulates the state of downloading a file.

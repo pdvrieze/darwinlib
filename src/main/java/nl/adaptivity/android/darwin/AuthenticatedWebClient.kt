@@ -20,7 +20,7 @@ import android.accounts.Account
 import android.app.Activity
 import android.content.Context
 import android.support.annotation.CallSuper
-import kotlinx.coroutines.experimental.Job
+import kotlinx.coroutines.Job
 import nl.adaptivity.kotlin.getValue
 import nl.adaptivity.kotlin.weakLazy
 import java.io.IOException

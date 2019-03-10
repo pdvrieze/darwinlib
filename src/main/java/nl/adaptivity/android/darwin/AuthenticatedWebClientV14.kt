@@ -24,8 +24,8 @@ import android.content.Context
 import android.os.Build
 import android.support.annotation.WorkerThread
 import android.util.Log
-import kotlinx.coroutines.experimental.Job
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import nl.adaptivity.android.coroutines.getAuthToken
 import java.io.IOException
 import java.net.*
