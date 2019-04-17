@@ -30,6 +30,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import nl.adaptivity.android.coroutines.Maybe
@@ -39,6 +40,7 @@ import nl.adaptivity.android.kotlin.bundle
 import nl.adaptivity.android.kotlin.set
 import java.io.File
 import kotlin.coroutines.Continuation
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Fragment that encapsulates the state of downloading a file.
@@ -149,7 +151,7 @@ class DownloadFragment(): Fragment() {
         /**
          * Async version of [download] that has a callback instead of being a suspend function.
          */
-        fun download(activity: Activity, downloadUri: Uri, callback: (Maybe<Uri>) -> Unit) {
+        fun CoroutineScope.download(activity: Activity, downloadUri: Uri, callback: (Maybe<Uri>) -> Unit) {
             launch {
                 try {
                     download(activity, downloadUri).also { callback(Maybe.Ok(it)) }

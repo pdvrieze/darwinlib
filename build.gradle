@@ -37,7 +37,7 @@ ext {
 buildscript {
     ext {
         if (!has('androidPluginVersion')) {
-            androidPluginVersion = '3.1.3'
+            androidPluginVersion = '3.3.2'
         }
         if (!has('kotlin_version')) {
             kotlin_version = '1.3.21'
@@ -83,10 +83,19 @@ dependencies {
     implementation "com.android.support:support-compat:${androidCompatVersion}"
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
 
-    api "net.devrieze:android-coroutines-appcompat:0.7.0"
-    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.1.1"
+    api "net.devrieze:android-coroutines:0.7.990"
+    api "net.devrieze:android-coroutines-appcompat:0.7.990"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.2.0"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
+
+
+repositories {
+    jcenter()
+    google()
+    mavenLocal()
+}
+
 
 kotlin {
     experimental {

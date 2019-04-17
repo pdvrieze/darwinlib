@@ -21,6 +21,7 @@ import android.app.Activity
 import android.content.Context
 import android.support.annotation.CallSuper
 import kotlinx.coroutines.Job
+import nl.adaptivity.android.coroutines.CoroutineActivity
 import nl.adaptivity.kotlin.getValue
 import nl.adaptivity.kotlin.weakLazy
 import java.io.IOException
@@ -231,10 +232,10 @@ interface AuthenticatedWebClient {
     @Throws(IOException::class)
     fun execute(context: Context, request: WebRequest): HttpURLConnection?
 
-    fun Activity.execute(request: WebRequest, onSuccess: RequestSuccess) =
+    fun CoroutineActivity.execute(request: WebRequest, onSuccess: RequestSuccess) =
             execute(request, false, NULL_ERROR_HANDLER, onSuccess)
 
-    fun Activity.execute(request: WebRequest, onError: RequestFailure, onSuccess: RequestSuccess) =
+    fun CoroutineActivity.execute(request: WebRequest, onError: RequestFailure, onSuccess: RequestSuccess) =
             execute(request, false, onError, onSuccess)
 
     /**
@@ -248,7 +249,7 @@ interface AuthenticatedWebClient {
      * @param onError Called when the request fails for some reason
      * @param onSuccess Called when the request was successful.
      */
-    fun Activity.execute(request: WebRequest, currentlyInRetry: Boolean, onError: RequestFailure, onSuccess: RequestSuccess): Job
+    fun CoroutineActivity.execute(request: WebRequest, currentlyInRetry: Boolean, onError: RequestFailure, onSuccess: RequestSuccess): Job
 
     companion object {
         private val NULL_ERROR_HANDLER: RequestFailure = RequestFailure { }

@@ -303,10 +303,10 @@ object AuthenticatedWebClientFactory {
     }
 
     @JvmStatic
-    fun tryEnsureAccount(context: Activity,
+    fun CoroutineActivity.tryEnsureAccount(context: Activity,
                          authBase: URI?,
                          callback: SerializableHandler<Activity, Maybe<Account?>>): Job {
-        return context.aLaunch {
+        return aLaunch {
             callback(context, ensureAccountToplevel(authBase))
         }
     }
@@ -324,7 +324,7 @@ object AuthenticatedWebClientFactory {
 
 
     @JvmStatic
-    fun <R> withClient(account: Account,
+    fun <R> CoroutineScope.withClient(account: Account,
                        authBase: URI?,
                        body: suspend CoroutineScope.(AuthenticatedWebClient) -> R): Deferred<R> {
         return async {
