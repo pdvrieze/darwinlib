@@ -20,7 +20,9 @@ import android.accounts.Account
 import android.app.Activity
 import android.content.Context
 import android.support.annotation.CallSuper
-import kotlinx.coroutines.experimental.Job
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import nl.adaptivity.android.coroutines.CoroutineActivity
 import nl.adaptivity.kotlin.getValue
 import nl.adaptivity.kotlin.weakLazy
 import java.io.IOException
@@ -231,11 +233,18 @@ interface AuthenticatedWebClient {
     @Throws(IOException::class)
     fun execute(context: Context, request: WebRequest): HttpURLConnection?
 
-    fun Activity.execute(request: WebRequest, onSuccess: RequestSuccess) =
-            execute(request, false, NULL_ERROR_HANDLER, onSuccess)
+    fun <A> A.execute(
+        request: WebRequest,
+        onSuccess: RequestSuccess
+    ) where A : Activity, A : CoroutineScope =
+        execute(request, false, NULL_ERROR_HANDLER, onSuccess)
 
-    fun Activity.execute(request: WebRequest, onError: RequestFailure, onSuccess: RequestSuccess) =
-            execute(request, false, onError, onSuccess)
+    fun <A> A.execute(
+        request: WebRequest,
+        onError: RequestFailure,
+        onSuccess: RequestSuccess
+    ) where A : Activity, A : CoroutineScope =
+        execute(request, false, onError, onSuccess)
 
     /**
      * Execute the web request. This will launch it's own worker thread so no need to worry. The
@@ -248,7 +257,7 @@ interface AuthenticatedWebClient {
      * @param onError Called when the request fails for some reason
      * @param onSuccess Called when the request was successful.
      */
-    fun Activity.execute(request: WebRequest, currentlyInRetry: Boolean, onError: RequestFailure, onSuccess: RequestSuccess): Job
+    fun <A> A.execute(request: WebRequest, currentlyInRetry: Boolean, onError: RequestFailure, onSuccess: RequestSuccess): Job where A : Activity, A:CoroutineScope
 
     companion object {
         private val NULL_ERROR_HANDLER: RequestFailure = RequestFailure { }

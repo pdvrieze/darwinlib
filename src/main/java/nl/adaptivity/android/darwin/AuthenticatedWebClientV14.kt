@@ -24,8 +24,10 @@ import android.content.Context
 import android.os.Build
 import android.support.annotation.WorkerThread
 import android.util.Log
-import kotlinx.coroutines.experimental.Job
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import nl.adaptivity.android.coroutines.CoroutineActivity
 import nl.adaptivity.android.coroutines.getAuthToken
 import java.io.IOException
 import java.net.*
@@ -91,7 +93,12 @@ internal class AuthenticatedWebClientV14(override val account: Account, override
         return null
     }
 
-    override fun Activity.execute(request: AuthenticatedWebClient.WebRequest, currentlyInRetry: Boolean, onError: RequestFailure, onSuccess: RequestSuccess): Job {
+    override fun <A> A.execute(
+        request: AuthenticatedWebClient.WebRequest,
+        currentlyInRetry: Boolean,
+        onError: RequestFailure,
+        onSuccess: RequestSuccess
+    ): Job where A : Activity, A : CoroutineScope {
         return launch {
             val connection = execute(this@execute, request)
             when {

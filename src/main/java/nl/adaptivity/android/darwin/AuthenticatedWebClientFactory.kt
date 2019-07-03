@@ -37,7 +37,7 @@ import android.support.v4.app.NotificationManagerCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
 import android.util.Log
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.*
 import nl.adaptivity.android.coroutines.*
 import nl.adaptivity.android.darwin.DarwinLibStatusEvents.*
 import nl.adaptivity.android.darwinlib.R
@@ -303,9 +303,18 @@ object AuthenticatedWebClientFactory {
     }
 
     @JvmStatic
-    fun tryEnsureAccount(context: Activity,
+    fun <A: CoroutineActivity> tryEnsureAccount(context: A,
                          authBase: URI?,
-                         callback: SerializableHandler<Activity, Maybe<Account?>>): Job {
+                         callback: SerializableHandler<A, Maybe<Account?>>): Job {
+        return context.aLaunch {
+            callback(context, ensureAccountToplevel(authBase))
+        }
+    }
+
+    @JvmStatic
+    fun <A: CompatCoroutineActivity> tryEnsureAccount(context: A,
+                         authBase: URI?,
+                         callback: SerializableHandler<A, Maybe<Account?>>): Job {
         return context.aLaunch {
             callback(context, ensureAccountToplevel(authBase))
         }
@@ -324,7 +333,7 @@ object AuthenticatedWebClientFactory {
 
 
     @JvmStatic
-    fun <R> withClient(account: Account,
+    fun <R> CoroutineScope.withClient(account: Account,
                        authBase: URI?,
                        body: suspend CoroutineScope.(AuthenticatedWebClient) -> R): Deferred<R> {
         return async {

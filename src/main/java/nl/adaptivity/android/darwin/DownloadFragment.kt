@@ -29,16 +29,14 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
-import kotlinx.coroutines.experimental.CancellationException
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.suspendCancellableCoroutine
+import kotlinx.coroutines.*
 import nl.adaptivity.android.coroutines.Maybe
 import nl.adaptivity.android.coroutines.ParcelableContinuation
 import nl.adaptivity.android.darwinlib.R
 import nl.adaptivity.android.kotlin.bundle
 import nl.adaptivity.android.kotlin.set
 import java.io.File
-import kotlin.coroutines.experimental.Continuation
+import kotlin.coroutines.Continuation
 
 /**
  * Fragment that encapsulates the state of downloading a file.
@@ -149,8 +147,9 @@ class DownloadFragment(): Fragment() {
         /**
          * Async version of [download] that has a callback instead of being a suspend function.
          */
+        @Deprecated("This uses the global scope")
         fun download(activity: Activity, downloadUri: Uri, callback: (Maybe<Uri>) -> Unit) {
-            launch {
+            GlobalScope.launch {
                 try {
                     download(activity, downloadUri).also { callback(Maybe.Ok(it)) }
                 } catch (e: CancellationException) {
