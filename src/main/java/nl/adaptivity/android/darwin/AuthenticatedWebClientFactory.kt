@@ -303,10 +303,19 @@ object AuthenticatedWebClientFactory {
     }
 
     @JvmStatic
-    fun CoroutineActivity.tryEnsureAccount(context: Activity,
+    fun <A: CoroutineActivity> tryEnsureAccount(context: A,
                          authBase: URI?,
-                         callback: SerializableHandler<Activity, Maybe<Account?>>): Job {
-        return aLaunch {
+                         callback: SerializableHandler<A, Maybe<Account?>>): Job {
+        return context.aLaunch {
+            callback(context, ensureAccountToplevel(authBase))
+        }
+    }
+
+    @JvmStatic
+    fun <A: CompatCoroutineActivity> tryEnsureAccount(context: A,
+                         authBase: URI?,
+                         callback: SerializableHandler<A, Maybe<Account?>>): Job {
+        return context.aLaunch {
             callback(context, ensureAccountToplevel(authBase))
         }
     }
