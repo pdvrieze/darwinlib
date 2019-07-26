@@ -16,7 +16,7 @@
 
 plugins {
     id("com.android.library")
-    kotlin("android")
+    id("kotlin-android")
     id("kotlin-android-extensions")
 }
 
