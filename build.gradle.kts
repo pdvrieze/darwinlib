@@ -61,9 +61,9 @@ dependencies {
     implementation("com.android.support:appcompat-v7:${androidCompatVersion}")
     implementation("com.android.support:support-compat:${androidCompatVersion}")
     implementation("com.android.support.constraint:constraint-layout:1.1.3")
-    api("net.devrieze:android-coroutines-appcompat:0.7.990-SNAPSHOT")
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.2.0")
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.2.0")
+    api("net.devrieze:android-coroutines-appcompat:0.7.991")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.2.2")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.2")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
 }
 

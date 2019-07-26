@@ -39,13 +39,14 @@ import android.support.v4.content.FileProvider
 import android.util.Log
 import kotlinx.coroutines.*
 import nl.adaptivity.android.coroutines.*
+import nl.adaptivity.android.coroutinesCompat.CompatCoroutineActivity
 import nl.adaptivity.android.darwin.DarwinLibStatusEvents.*
 import nl.adaptivity.android.darwinlib.R
 import java.io.File
 import java.io.IOException
+import java.lang.IllegalStateException
 import java.net.URI
 import nl.adaptivity.android.darwin.ensureAccount as ensureAccountToplevel
-import nl.adaptivity.android.darwin.tryDownloadAndInstallAuthenticator as tryDownloadAndInstallAuthenticatorTL
 
 /**
  * A class for creating authenticated web clients
@@ -298,30 +299,30 @@ object AuthenticatedWebClientFactory {
     }
 
     @Deprecated("Use toplevel version", ReplaceWith("nl.adaptivity.android.darwin.ensureAccount(authBase)"))
-    suspend fun ActivityCoroutineScope<*, *>.ensureAccount(authBase: URI?): Maybe<Account?> {
+    suspend fun AndroidContextCoroutineScope<Context, *>.ensureAccount(authBase: URI?): Maybe<Account?> {
         return ensureAccountToplevel(authBase)
     }
 
     @JvmStatic
-    fun <A: CoroutineActivity> tryEnsureAccount(context: A,
+    fun <A: CoroutineActivity<A>> tryEnsureAccount(context: A,
                          authBase: URI?,
                          callback: SerializableHandler<A, Maybe<Account?>>): Job {
-        return context.aLaunch {
+        return context.launch {
             callback(context, ensureAccountToplevel(authBase))
         }
     }
 
     @JvmStatic
-    fun <A: CompatCoroutineActivity> tryEnsureAccount(context: A,
-                         authBase: URI?,
-                         callback: SerializableHandler<A, Maybe<Account?>>): Job {
-        return context.aLaunch {
+    fun <A: CompatCoroutineActivity<A>> tryEnsureAccount(context: A,
+                                                      authBase: URI?,
+                                                      callback: SerializableHandler<A, Maybe<Account?>>): Job {
+        return context.launch {
             callback(context, ensureAccountToplevel(authBase))
         }
     }
 
-    suspend fun ActivityCoroutineScope<*, *>.tryDownloadAndInstallAuthenticator(): Maybe<Unit> {
-        return tryDownloadAndInstallAuthenticatorTL()
+    suspend fun AndroidContextCoroutineScope<Activity, *>.tryDownloadAndInstallAuthenticatorDepr(): Maybe<Unit> {
+        return tryDownloadAndInstallAuthenticator()
     }
 
 
@@ -350,12 +351,14 @@ object AuthenticatedWebClientFactory {
 
 }
 
-private suspend fun ActivityCoroutineScope<*, *>.ensureAuthenticator(): Boolean {
-    if (AuthenticatedWebClientFactory.hasAuthenticator(activity)) return true
-    return tryDownloadAndInstallAuthenticatorTL() is Maybe.Ok<*>
-}
+private suspend fun AndroidContextCoroutineScope<Context, *>.ensureAuthenticator(): Boolean = when {
+    AuthenticatedWebClientFactory.hasAuthenticator(getAndroidContext()) -> true
+    getAndroidContext() is Activity -> (this as AndroidContextCoroutineScope<Activity, *>).tryDownloadAndInstallAuthenticator() is Maybe.Ok<*>
+    else -> false
+} // can not download
 
-suspend fun ActivityCoroutineScope<*, *>.tryDownloadAndInstallAuthenticator(): Maybe<Unit> {
+suspend fun AndroidContextCoroutineScope<Activity, *>.tryDownloadAndInstallAuthenticator(): Maybe<Unit> {
+    val activity = getAndroidContext()
     if (SuspDownloadDialog.newInstance(-1).show(activity,
                                                 AuthenticatedWebClient.DOWNLOAD_DIALOG_TAG).flatMap() != true) {
         activity.reportStatus(AUTHENTICATOR_DOWNLOAD_REJECTED)
@@ -379,7 +382,8 @@ suspend fun ActivityCoroutineScope<*, *>.tryDownloadAndInstallAuthenticator(): M
 }
 
 
-suspend fun ActivityCoroutineScope<*, *>.doInstall(uri: Uri): Maybe<Unit> {
+suspend fun AndroidContextCoroutineScope<Activity, *>.doInstall(uri: Uri): Maybe<Unit> {
+    val activity = getAndroidContext()
     val installIntent = Intent(Intent.ACTION_VIEW).apply {
         setDataAndType(uri, "application/vnd.android.package-archive")
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -400,11 +404,11 @@ suspend fun ActivityCoroutineScope<*, *>.doInstall(uri: Uri): Maybe<Unit> {
     }
 }
 
-suspend fun ContextedCoroutineScope<*, *>.isAccountValid(account: Account?, authBase: URI?): Boolean {
+suspend fun AndroidContextCoroutineScope<*, *>.isAccountValid(account: Account?, authBase: URI?): Boolean {
     if (account == null) return false
 
     try {
-        return account.hasFeatures(AuthenticatedWebClientFactory.accountFeatures(authBase))
+        return accountHasFeatures(account, AuthenticatedWebClientFactory.accountFeatures(authBase))
     } catch (e: AuthenticatorException) {
         return false
     }
@@ -413,20 +417,28 @@ suspend fun ContextedCoroutineScope<*, *>.isAccountValid(account: Account?, auth
 internal const val AUTHENTICATOR_URL = "https://darwin.bournemouth.ac.uk/darwin-auth.apk"
 
 
-suspend fun ActivityCoroutineScope<*, *>.ensureAccount(authBase: URI?): Maybe<Account?> {
+suspend fun AndroidContextCoroutineScope<*, *>.ensureAccount(authBase: URI?): Maybe<Account?> {
+    if (!ensureAuthenticator()) return Maybe.cancelled()
     // If we have a stored, valid, account, just return it
-    AuthenticatedWebClientFactory.getStoredAccount(activity)?.let { account ->
+    AuthenticatedWebClientFactory.getStoredAccount(getAndroidContext())?.let { account ->
         if (isAccountValid(account, authBase)) {
             return Maybe.Ok(account)
         } else { // Not valid, forget the account
-            AuthenticatedWebClientFactory.setStoredAccount(activity, null)
+            AuthenticatedWebClientFactory.setStoredAccount(getAndroidContext(), null)
         }
     }
-    if (!ensureAuthenticator()) return Maybe.cancelled()
-    val selectAccountIntent = AuthenticatedWebClientFactory.selectAccount(activity, null, authBase)
-    return activity.activityResult(selectAccountIntent)
-        .apply {
-            activity.reportStatus(select(ACCOUNT_SELECTED, ACCOUNT_SELECTION_CANCELLED, ACCOUNT_SELECTION_FAILED))
-        }
-        .map { it?.account?.also { AuthenticatedWebClientFactory.setStoredAccount(activity, it) } }
+
+    val selectAccountIntent = AuthenticatedWebClientFactory.selectAccount(getAndroidContext(), null, authBase)
+    val context = getAndroidContext()
+    if (context is Activity) {
+        val activity = context
+        return activity.activityResult(selectAccountIntent)
+            .apply {
+                activity.reportStatus(select(ACCOUNT_SELECTED, ACCOUNT_SELECTION_CANCELLED, ACCOUNT_SELECTION_FAILED))
+            }
+            .map { it?.account?.also { AuthenticatedWebClientFactory.setStoredAccount(activity, it) } }
+
+    } else {
+        return Maybe.error(IllegalStateException("No account available in context, and not in activity scope"))
+    }
 }

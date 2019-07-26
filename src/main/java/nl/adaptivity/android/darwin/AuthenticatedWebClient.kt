@@ -22,7 +22,6 @@ import android.content.Context
 import android.support.annotation.CallSuper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import nl.adaptivity.android.coroutines.CoroutineActivity
 import nl.adaptivity.kotlin.getValue
 import nl.adaptivity.kotlin.weakLazy
 import java.io.IOException
@@ -32,6 +31,8 @@ import java.net.HttpURLConnection
 import java.net.ProtocolException
 import java.net.URI
 import java.nio.charset.Charset
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 
 /**
@@ -88,10 +89,10 @@ interface AuthenticatedWebClient {
         /**
          * Get the value of the header with the given name
          */
-        fun getHeader(name:String): String? {
+        fun getHeader(name: String): String? {
             headers?.let { headers ->
-                for(i in headers.indices step 2) {
-                    if (headers[i]==name) return headers[i+1]
+                for (i in headers.indices step 2) {
+                    if (headers[i] == name) return headers[i + 1]
                 }
             }
             return null
@@ -103,19 +104,19 @@ interface AuthenticatedWebClient {
         fun setHeader(name: String, value: String) {
             val headers = headers.let { h ->
                 when (h) {
-                // No headers
+                    // No headers
                     null -> arrayOfNulls<String>(10).also { headers = it }
                     else -> {
                         /* Short circuit for updating an existing header, not even trying to extend
                                  * in that case. */
                         for (i in h.indices step 2) {
-                            if (h[i]==name) {
-                                h[i+1] = value
+                            if (h[i] == name) {
+                                h[i + 1] = value
                                 return
                             }
                         }
                         when {
-                        // The header array is full, we need a bigger one.
+                            // The header array is full, we need a bigger one.
                             h.size == headerCount * 2 -> h.copyOf(h.size * 2).also { headers = it }
                             else -> h
                         }
@@ -134,7 +135,8 @@ interface AuthenticatedWebClient {
          */
         @Suppress("unused")
         fun getHeaderName(index: Int): String {
-            return headers?.get(index * 2) ?: throw IndexOutOfBoundsException("No headers have been defined")
+            return headers?.get(index * 2)
+                ?: throw IndexOutOfBoundsException("No headers have been defined")
         }
 
         /**
@@ -143,7 +145,8 @@ interface AuthenticatedWebClient {
          */
         @Suppress("unused")
         fun getHeaderValue(index: Int): String {
-            return headers?.get(index * 2 + 1) ?: throw IndexOutOfBoundsException("No headers have been defined")
+            return headers?.get(index * 2 + 1)
+                ?: throw IndexOutOfBoundsException("No headers have been defined")
         }
     }
 
@@ -175,11 +178,17 @@ interface AuthenticatedWebClient {
      * @param writingCallback The callback that can write the post data when needed. This could be
      *                        called multiple times!
      */
-    class PostRequest @JvmOverloads constructor(uri: URI, private val writingCallback: StreamWriterCallback, contentType: String? = null) : WebRequest(uri) {
+    class PostRequest @JvmOverloads constructor(
+        uri: URI,
+        private val writingCallback: StreamWriterCallback,
+        contentType: String? = null
+    ) : WebRequest(uri) {
 
-        var contentType:String
+        var contentType: String
             get() = getHeader("Content-type") ?: "application/binary"
-            set(value) { setHeader("Content-type", value) }
+            set(value) {
+                setHeader("Content-type", value)
+            }
 
         init {
             this.contentType = contentType ?: "application/binary"
@@ -203,7 +212,11 @@ interface AuthenticatedWebClient {
          */
         @Suppress("unused")
         @JvmOverloads
-        constructor(uri: URI, body: CharSequence, contentType: String? = null) : this(uri, CharSequenceCallback(body), contentType)
+        constructor(uri: URI, body: CharSequence, contentType: String? = null) : this(
+            uri,
+            CharSequenceCallback(body),
+            contentType
+        )
 
     }
 
@@ -217,6 +230,7 @@ interface AuthenticatedWebClient {
                 out.flush() // Just flush, don't close.
             }
         }
+
         companion object {
             val UTF8 by weakLazy { Charset.forName("UTF-8")!! }
         }
@@ -257,7 +271,12 @@ interface AuthenticatedWebClient {
      * @param onError Called when the request fails for some reason
      * @param onSuccess Called when the request was successful.
      */
-    fun <A> A.execute(request: WebRequest, currentlyInRetry: Boolean, onError: RequestFailure, onSuccess: RequestSuccess): Job where A : Activity, A:CoroutineScope
+    fun <A> A.execute(
+        request: WebRequest,
+        currentlyInRetry: Boolean,
+        onError: RequestFailure,
+        onSuccess: RequestSuccess
+    ): Job where A : Activity, A : CoroutineScope
 
     companion object {
         private val NULL_ERROR_HANDLER: RequestFailure = RequestFailure { }
@@ -284,5 +303,17 @@ typealias RequestFailure = IRequestFailure//(HttpURLConnection?)->Unit
 
 @Suppress("NOTHING_TO_INLINE")
 inline operator fun IRequestSuccess.invoke(connection: HttpURLConnection) = onSuccess(connection)
+
 @Suppress("NOTHING_TO_INLINE")
 inline operator fun IRequestFailure.invoke(connection: HttpURLConnection?) = onFailure(connection)
+
+@UseExperimental(ExperimentalContracts::class)
+fun HttpURLConnection?.isSuccess(): Boolean {
+    contract {
+        returns(true) implies (this@isSuccess != null)
+    }
+    if (this == null) return false
+
+    val status = responseCode
+    return (status >=200) and (status<300)
+}
