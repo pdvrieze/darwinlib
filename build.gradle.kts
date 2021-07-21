@@ -70,7 +70,7 @@ dependencies {
 
 repositories {
     mavenLocal()
-    jcenter()
+    mavenCentral()
     google()
     maven("https://plugins.gradle.org/m2/")
 }
